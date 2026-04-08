@@ -4,12 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "bkash-pgw-tokenized"
-version = "0.1.0"
+version = "1.0.0"
 description = "Async client for bKash Tokenized Checkout (grant/refresh, create/execute, status, search, refund) and SNS IPN verification."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-authors = [{ name = "bKash boilerplate contributors" }]
+authors = [{ name = "Nahid Reza", email = "nahidreza99@gmail.com" }]
 keywords = ["bkash", "payment", "pgw", "tokenized", "bangladesh"]
 classifiers = [
   "Development Status :: 4 - Beta",

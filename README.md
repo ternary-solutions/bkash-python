@@ -1,21 +1,23 @@
 # bkash-pgw-tokenized
 
-Async Python client for **bKash Tokenized Checkout**: grant/refresh token, create/execute payment, payment status, search transaction, refund, plus helpers for **SNS-signed IPN** payloads.
+[![PyPI version](https://img.shields.io/pypi/v/bkash-pgw-tokenized.svg)](https://pypi.org/project/bkash-pgw-tokenized/)
+[![Python versions](https://img.shields.io/pypi/pyversions/bkash-pgw-tokenized.svg)](https://pypi.org/project/bkash-pgw-tokenized/)
+[![License](https://img.shields.io/pypi/l/bkash-pgw-tokenized.svg)](https://pypi.org/project/bkash-pgw-tokenized/)
 
-**Import package:** `bkash_pgw_tokenized`  
-**PyPI / pip name:** `bkash-pgw-tokenized`
+Async Python client for **bKash Tokenized Checkout**: grant and refresh tokens, create and execute payments, payment status, search transaction, refund, plus helpers for **SNS-signed IPN** payloads.
 
-Install:
+- **Install name (pip):** `bkash-pgw-tokenized`
+- **Import package:** `bkash_pgw_tokenized`
+- **Requires:** Python 3.10+
+- **bKash Tokenized API:** **v1.2.0-beta** (default base URLs include `/v1.2.0-beta`; set `base_url` in config to target another version if needed)
+
+## Installation
 
 ```bash
-pip install -e "./packages/bkash_pgw_tokenized[dev]"   # from repo root (+ pytest)
-# default install includes httpx + cryptography (IPN / SNS signature verification)
-pip install -e "./packages/bkash_pgw_tokenized"
+pip install bkash-pgw-tokenized
 ```
 
-Published wheels from PyPI: `pip install bkash-pgw-tokenized` includes **cryptography** so SNS IPN verification works without extras. The legacy extra `bkash-pgw-tokenized[ipn]` is a no-op (kept for old requirement lines).
-
-## Usage
+## Quick start
 
 ```python
 from bkash_pgw_tokenized import Bkash, MemoryTokenStore, ensure_id_token
@@ -58,7 +60,7 @@ refund = await client.refund(
 )
 ```
 
-Optional keys: `"sandbox"` (defaults to `True`), `"base_url"` (overrides the default host for that mode).
+Optional config keys: `"sandbox"` (defaults to `True`), `"base_url"` (overrides the default host for that mode).
 
 On HTTP error responses, the client raises `BkashHttpError` with `status_code` and `response_body`.
 
@@ -79,13 +81,13 @@ bKash surfaces outcomes in three places: the **browser callback** to your `callb
 
 After the customer acts in the bKash flow, bKash redirects their browser to the **`callbackURL`** you sent in **Create payment**. That request is a normal HTTP **GET** with **query-string parameters** appended (names are commonly camelCase such as `paymentID`; treat lookups case-insensitively if your framework allows duplicate casing).
 
-**Parameters you should handle (tokenized checkout; aligned with common integrations and the demo in this monorepo):**
+**Parameters you should handle (tokenized checkout):**
 
-| Query parameter | Typical presence | Meaning |
-|-----------------|------------------|---------|
-| **`paymentID`** | Expected | The bKash payment id (same as in the Create response). Required to call **`execute_payment`** / **`payment_status`**. |
-| **`status`** | Expected | **This is where success vs failure vs cancel is indicated for the redirect.** String value from bKash (see classification table below). |
-| **`signature`** | May be present | Reserved for **callback integrity verification** against bKash’s rules. Your app should accept the parameter and verify it when your integration guide requires it (the demo API stores it for future use). |
+| Query parameter | Typical presence | Meaning                                                                                                                                                             |
+| --------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`paymentID`** | Expected         | The bKash payment id (same as in the Create response). Required to call **`execute_payment`** / **`payment_status`**.                                               |
+| **`status`**    | Expected         | **This is where success vs failure vs cancel is indicated for the redirect.** String value from bKash (see classification table below).                             |
+| **`signature`** | May be present   | Reserved for **callback integrity verification** against bKash’s rules. Your app should accept the parameter and verify it when your integration guide requires it. |
 
 bKash may add other query keys over time. During integration, **log the full query string** (or `request.GET` / `request.query_params`) in sandbox so you do not miss extra fields your account or API version sends.
 
@@ -93,12 +95,12 @@ bKash may add other query keys over time. During integration, **log the full que
 
 Normalize: `s = status.strip().lower()` (after ensuring `status` is a non-empty string).
 
-| If `s` is in… | Treat as | Then |
-|-----------------|----------|------|
-| `failure`, `fail`, `failed` | **Failed** | Do **not** call Execute. Mark order unpaid / show error. |
-| `cancel`, `cancelled`, `canceled` | **Cancelled** | Do **not** call Execute. Mark as user-cancelled (distinct from a hard failure if you want different UX). |
+| If `s` is in…                       | Treat as             | Then                                                                                                                                                                      |
+| ----------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `failure`, `fail`, `failed`         | **Failed**           | Do **not** call Execute. Mark order unpaid / show error.                                                                                                                  |
+| `cancel`, `cancelled`, `canceled`   | **Cancelled**        | Do **not** call Execute. Mark as user-cancelled (distinct from a hard failure if you want different UX).                                                                  |
 | exactly `success` (after normalize) | **Callback success** | **Still not “paid” yet.** Call `await client.execute_payment(id_token, paymentID)` and apply the JSON rules in **section 2** (or `payment_status` if Execute is unclear). |
-| anything else | **Unknown / unsafe** | Do **not** assume success. Treat like failure until you confirm with bKash docs or support for your environment. |
+| anything else                       | **Unknown / unsafe** | Do **not** assume success. Treat like failure until you confirm with bKash docs or support for your environment.                                                          |
 
 If **`paymentID`** or **`status`** is missing, you cannot complete the flow safely; reject the request and do not Execute.
 
@@ -108,11 +110,11 @@ After the callback indicates **`status=success`**, the source of truth for money
 
 For **Execute** and **Payment status**, treat payment as **completed** only when **all** of the following hold (same rules many merchants use in production):
 
-| Field | Success value |
-|-------|----------------|
-| `statusCode` | `"0000"` |
-| `statusMessage` | `"Successful"` |
-| `transactionStatus` | `"Completed"` |
+| Field               | Success value  |
+| ------------------- | -------------- |
+| `statusCode`        | `"0000"`       |
+| `statusMessage`     | `"Successful"` |
+| `transactionStatus` | `"Completed"`  |
 
 If `statusCode` is present and not `"0000"`, or `transactionStatus` is present and not `"Completed"`, treat as **failure**. Use `errorCode` / `statusCode` with `describe_code` from `bkash_pgw_tokenized` for human-readable messages:
 
@@ -141,7 +143,7 @@ For server-side notifications, use `ipn_inner_is_success(inner)` (see [IPN (SNS)
 
 ### Reference
 
-- Full numeric codes: [bKash error codes](https://developer.bka.sh/docs/error-codes)  
+- Full numeric codes: [bKash error codes](https://developer.bka.sh/docs/error-codes)
 - Success API code for many operations: **`0000`**
 
 ## IPN (SNS)
@@ -173,15 +175,18 @@ except SnsVerificationError:
     ...
 ```
 
+## Documentation
+
+Official bKash developer documentation: [developer.bka.sh](https://developer.bka.sh/) (see also [project URLs on PyPI](https://pypi.org/project/bkash-pgw-tokenized/)).
+
 ## Development
 
+From a local clone of the source tree (repository root, where `pyproject.toml` lives):
+
 ```bash
-cd packages/bkash_pgw_tokenized
 pip install -e ".[dev]"
 pytest
 ```
-
-**Poetry** (2.x reads PEP 621): `cd packages/bkash_pgw_tokenized && poetry install --extras dev`.
 
 ## License
 
