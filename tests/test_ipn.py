@@ -49,3 +49,32 @@ def test_extract_inner_from_sns_envelope() -> None:
 def test_extract_inner_errors() -> None:
     with pytest.raises(ValueError, match="missing string Message"):
         extract_inner_from_sns_envelope({"Message": 1})  # type: ignore[arg-type]
+
+
+def test_extract_inner_requires_json_object() -> None:
+    with pytest.raises(ValueError, match="JSON object"):
+        extract_inner_from_sns_envelope({"Message": '["not-an-object"]'})
+
+
+def test_amounts_match_returns_false_for_invalid_values() -> None:
+    assert amounts_match("bad", "10.00") is False
+
+
+def test_ipn_inner_fails_when_error_code_is_present() -> None:
+    ok, reason = ipn_inner_is_success({"errorCode": "2002"})
+    assert ok is False
+    assert reason == "Invalid Payment ID"
+
+
+def test_ipn_inner_with_status_code_requires_completed_transaction() -> None:
+    ok, reason = ipn_inner_is_success(
+        {"statusCode": "0000", "transactionStatus": "Pending"},
+    )
+    assert ok is False
+    assert reason == "Pending"
+
+
+def test_ipn_inner_without_status_code_fails_when_not_completed() -> None:
+    ok, reason = ipn_inner_is_success({"transactionStatus": "Pending"})
+    assert ok is False
+    assert reason == "Unknown code: Pending"

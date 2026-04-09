@@ -4,7 +4,6 @@ import httpx
 import pytest
 
 from bkash_pgw_tokenized import Bkash, BkashHttpError
-
 from tests.helpers import SAMPLE_BASE, make_transport
 
 
@@ -93,13 +92,74 @@ async def test_http_error_includes_body(config: dict[str, str | bool]) -> None:
 
 
 @pytest.mark.asyncio
-async def test_execute_payment_invalid_json_returns_empty_dict(config: dict[str, str | bool]) -> None:
+async def test_http_error_uses_text_body_when_json_is_invalid(
+    config: dict[str, str | bool],
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(502, text="bad gateway")
+
+    client = Bkash(config, transport=httpx.MockTransport(handler))
+    with pytest.raises(BkashHttpError) as ei:
+        await client.grant_token()
+    assert ei.value.status_code == 502
+    assert ei.value.response_body == "bad gateway"
+
+
+@pytest.mark.asyncio
+async def test_execute_payment_invalid_json_returns_empty_dict(
+    config: dict[str, str | bool],
+) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, content=b"not-json")
 
     client = Bkash(config, transport=httpx.MockTransport(handler))
     out = await client.execute_payment("tok", "pid")
     assert out == {}
+
+
+@pytest.mark.asyncio
+async def test_execute_payment_http_error_uses_text_body(config: dict[str, str | bool]) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(503, text="temporarily unavailable")
+
+    client = Bkash(config, transport=httpx.MockTransport(handler))
+    with pytest.raises(BkashHttpError) as ei:
+        await client.execute_payment("tok", "pid")
+    assert ei.value.status_code == 503
+    assert ei.value.response_body == "temporarily unavailable"
+
+
+@pytest.mark.asyncio
+async def test_payment_status_and_refund_use_expected_paths(config: dict[str, str | bool]) -> None:
+    seen: list[tuple[str, dict[str, str]]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content.decode())
+        seen.append((str(request.url.path), body))
+        return httpx.Response(200, json={"statusCode": "0000"})
+
+    client = Bkash(config, transport=httpx.MockTransport(handler))
+    await client.payment_status("tok", "pid-1")
+    await client.refund(
+        "tok",
+        payment_id="pid-1",
+        trx_id="trx-1",
+        amount="10.00",
+        sku="sku-1",
+        reason="Customer request",
+    )
+
+    assert seen[0] == ("/v1.2.0-beta/tokenized/checkout/payment/status", {"paymentID": "pid-1"})
+    assert seen[1] == (
+        "/v1.2.0-beta/tokenized/checkout/payment/refund",
+        {
+            "paymentID": "pid-1",
+            "trxID": "trx-1",
+            "amount": "10.00",
+            "sku": "sku-1",
+            "reason": "Customer request",
+        },
+    )
 
 
 @pytest.mark.asyncio

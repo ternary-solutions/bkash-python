@@ -9,15 +9,21 @@ description = "Async client for bKash Tokenized Checkout (grant/refresh, create/
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Nahid Reza", email = "nahidreza99@gmail.com" }]
 keywords = ["bkash", "payment", "pgw", "tokenized", "bangladesh"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Framework :: AsyncIO",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Libraries :: Python Modules",
   "Typing :: Typed",
 ]
 dependencies = [
@@ -28,17 +34,63 @@ dependencies = [
 [project.optional-dependencies]
 # Backward compatible no-op: IPN/SNS support uses cryptography, which is a core dependency now.
 ipn = []
-dev = ["pytest>=8", "pytest-asyncio>=0.24"]
+dev = [
+  "build>=1.2.2",
+  "mypy>=1.11",
+  "pre-commit>=3.8",
+  "pytest>=8",
+  "pytest-asyncio>=0.24",
+  "pytest-cov>=5",
+  "ruff>=0.6.9",
+  "twine>=5.1.1",
+]
 
 [project.urls]
-Documentation = "https://developer.bka.sh/"
+Homepage = "https://github.com/ternary-solutions/bkash-pgw-tokenized-python-package"
+Documentation = "https://github.com/ternary-solutions/bkash-pgw-tokenized-python-package#readme"
+Repository = "https://github.com/ternary-solutions/bkash-pgw-tokenized-python-package"
+Issues = "https://github.com/ternary-solutions/bkash-pgw-tokenized-python-package/issues"
+Discussions = "https://github.com/ternary-solutions/bkash-pgw-tokenized-python-package/discussions"
+Changelog = "https://github.com/ternary-solutions/bkash-pgw-tokenized-python-package/blob/main/CHANGELOG.md"
+Security = "https://github.com/ternary-solutions/bkash-pgw-tokenized-python-package/blob/main/SECURITY.md"
+"bKash Developer Docs" = "https://developer.bka.sh/"
 
 [tool.hatch.build.targets.wheel]
 packages = ["bkash_pgw_tokenized"]
 
 [tool.hatch.build.targets.sdist]
-include = ["bkash_pgw_tokenized", "README.md", "tests"]
+include = [
+  "bkash_pgw_tokenized",
+  "CHANGELOG.md",
+  "CODE_OF_CONDUCT.md",
+  "CONTRIBUTING.md",
+  "LICENSE",
+  "README.md",
+  "SECURITY.md",
+  "SUPPORT.md",
+  "tests",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+addopts = "-ra"
 testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["bkash_pgw_tokenized"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+pretty = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

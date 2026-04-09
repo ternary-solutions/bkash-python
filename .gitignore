@@ -59,6 +59,7 @@ dmypy.json
 # Virtual environments
 .env
 .venv
+.venv-smoke/
 env/
 venv/
 ENV/

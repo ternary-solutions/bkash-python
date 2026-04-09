@@ -5,6 +5,7 @@ from bkash_pgw_tokenized import (
     BKASH_TOKENIZED_SANDBOX_BASE_URL,
     Bkash,
 )
+from bkash_pgw_tokenized.config import _Credentials
 
 
 def test_bkash_requires_config_dict() -> None:
@@ -88,3 +89,56 @@ def test_async_bkash_client_is_alias() -> None:
     from bkash_pgw_tokenized import AsyncBkashClient
 
     assert AsyncBkashClient is Bkash
+
+
+def test_credentials_mapping_helpers_and_repr_redact_secrets() -> None:
+    config = {
+        "app_key": "app",
+        "app_secret": "secret",
+        "username": "user",
+        "password": "pass",
+        "sandbox": 0,
+        "base_url": " https://custom.example/api/ ",
+    }
+
+    creds = _Credentials(config)
+    same = _Credentials(config)
+
+    assert creds["app_key"] == "app"
+    assert creds.to_dict()["password"] == "pass"
+    assert list(creds.keys()) == [
+        "app_key",
+        "app_secret",
+        "username",
+        "password",
+        "sandbox",
+        "base_url",
+    ]
+    assert list(creds.values())[-2:] == [False, "https://custom.example/api/"]
+    assert list(creds.items())[0] == ("app_key", "app")
+    assert list(iter(creds)) == [
+        "app_key",
+        "app_secret",
+        "username",
+        "password",
+        "sandbox",
+        "base_url",
+    ]
+    assert len(creds) == 6
+    assert creds.app_key == "app"
+    assert creds.app_secret == "secret"
+    assert creds.username == "user"
+    assert creds.password == "pass"
+    assert creds.sandbox is False
+    assert creds.base_url == "https://custom.example/api/"
+    assert creds.normalized_base_url() == "https://custom.example/api"
+    assert creds == same
+    assert hash(creds) == hash(same)
+    assert creds != object()
+
+    text = repr(creds)
+    assert "'app_secret': 'secret'" not in text
+    assert "'password': 'pass'" not in text
+    assert "'app_secret': '…'" in text
+    assert "'password': '…'" in text
+    assert "_Credentials({" in text

@@ -11,6 +11,7 @@ import httpx
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 
 _SNS_HOST_PATTERN = re.compile(r"^sns\.[a-zA-Z0-9\-]{3,}\.amazonaws\.com(\.cn)?$")
 
@@ -54,7 +55,10 @@ def _validate_signing_cert_url(url: str) -> None:
 
 
 def _cert_from_aws_sns(pem_bytes: bytes) -> x509.Certificate:
-    certs = x509.load_pem_x509_certificates(pem_bytes)
+    try:
+        certs = x509.load_pem_x509_certificates(pem_bytes)
+    except ValueError as e:
+        raise SnsVerificationError("No certificate in PEM response") from e
     if not certs:
         raise SnsVerificationError("No certificate in PEM response")
     cert = certs[0]
@@ -104,6 +108,8 @@ def verify_sns_signature(message: dict[str, Any]) -> None:
 
     cert = fetch_signing_certificate(signing_cert_url)
     pubkey = cert.public_key()
+    if not isinstance(pubkey, RSAPublicKey):
+        raise SnsVerificationError("SNS signing certificate public key is not RSA")
 
     hash_alg = hashes.SHA1() if sig_ver == "1" else hashes.SHA256()
 

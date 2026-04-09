@@ -1,0 +1,54 @@
+name: Bug report
+description: Report a reproducible problem in the library.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug report. Please use sandbox data only and redact
+        any credentials or sensitive payment details.
+  - type: input
+    id: version
+    attributes:
+      label: Library version
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.12.3"
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Include the observed behavior and why it is incorrect.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Provide the smallest example that reproduces the issue.
+      placeholder: |
+        1. Configure the client with ...
+        2. Call ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or payload samples
+      description: Redact secrets, tokens, phone numbers, and live transaction data.
+      render: shell

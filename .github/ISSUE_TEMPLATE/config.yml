@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and support
+    url: https://github.com/ternary-solutions/bkash-pgw-tokenized-python-package/discussions
+    about: Ask usage questions and integration support questions in GitHub Discussions.
+  - name: Private security report
+    url: mailto:devsecops@ternary.solutions
+    about: Report suspected vulnerabilities privately by email.

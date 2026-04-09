@@ -40,7 +40,8 @@ def ipn_inner_is_success(inner: dict[str, Any]) -> tuple[bool, str | None]:
     """
     Returns (ok, failure_reason).
 
-    If statusCode is present, it must be 0000; if transactionStatus is present, it must be Completed.
+    If statusCode is present, it must be 0000; if transactionStatus is present,
+    it must be Completed.
     If statusCode is absent, transactionStatus must be Completed (documented IPN sample).
     """
     err = inner.get("errorCode") if "errorCode" in inner else inner.get("error_code")
@@ -50,7 +51,11 @@ def ipn_inner_is_success(inner: dict[str, Any]) -> tuple[bool, str | None]:
     has_status_code = "statusCode" in inner or "status_code" in inner
     sc = inner.get("statusCode") if "statusCode" in inner else inner.get("status_code")
 
-    ts = inner.get("transactionStatus") if "transactionStatus" in inner else inner.get("transaction_status")
+    ts = (
+        inner.get("transactionStatus")
+        if "transactionStatus" in inner
+        else inner.get("transaction_status")
+    )
 
     if has_status_code:
         if not is_success_status_code(sc):

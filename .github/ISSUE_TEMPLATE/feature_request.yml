@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest an improvement or new capability for the library.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the integration pain point or missing capability.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the API shape or behavior you would like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Include any workarounds or alternative designs.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Link to upstream bKash docs, examples, or related issues if helpful.

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Protocol, runtime_checkable
 
 from bkash_pgw_tokenized.client import Bkash
@@ -63,7 +63,7 @@ async def ensure_id_token(
     if row is None:
         row = TokenState()
 
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     skew = timedelta(seconds=skew_seconds)
 
     if row.id_token and row.id_token_expires_at and row.id_token_expires_at - skew > now:
@@ -72,14 +72,16 @@ async def ensure_id_token(
     if row.refresh_token:
         data = await client.refresh_token(row.refresh_token)
         if _token_body_ok(data):
+            id_token = str(data["id_token"])
             row = replace(
                 row,
-                id_token=data["id_token"],
+                id_token=id_token,
                 refresh_token=data.get("refresh_token") or row.refresh_token,
-                id_token_expires_at=now + timedelta(seconds=_parse_expires_in(data.get("expires_in"))),
+                id_token_expires_at=now
+                + timedelta(seconds=_parse_expires_in(data.get("expires_in"))),
             )
             await store.save(row)
-            return row.id_token  # type: ignore[return-value]
+            return id_token
         row = replace(row, refresh_token=None)
         await store.save(row)
 
@@ -88,11 +90,12 @@ async def ensure_id_token(
         msg = data.get("statusMessage") or data.get("errorMessage") or "Grant token failed"
         raise RuntimeError(str(msg))
 
+    id_token = str(data["id_token"])
     row = replace(
         row,
-        id_token=data["id_token"],
+        id_token=id_token,
         refresh_token=data.get("refresh_token"),
         id_token_expires_at=now + timedelta(seconds=_parse_expires_in(data.get("expires_in"))),
     )
     await store.save(row)
-    return row.id_token  # type: ignore[return-value]
+    return id_token

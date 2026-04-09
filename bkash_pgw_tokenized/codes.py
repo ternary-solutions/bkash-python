@@ -32,7 +32,10 @@ BKASH_ERROR_CODES: dict[str, str] = {
     "2024": "Exception occurred",
     "2025": "Invalid request body",
     "2026": "The reversal amount cannot be greater than the original transaction amount",
-    "2027": "The mandate corresponding to the payer reference number already exists and cannot be created again",
+    "2027": (
+        "The mandate corresponding to the payer reference number already exists "
+        "and cannot be created again"
+    ),
     "2028": "Reverse failed because the transaction serial number does not exist",
     "2029": "Duplicate for all transactions",
     "2030": "Invalid mandate request type",
@@ -42,14 +45,22 @@ BKASH_ERROR_CODES: dict[str, str] = {
     "2034": "The transaction cannot be reversed because the original transaction has been reversed",
     "2035": "Reverse failed because the initiator has no permission to reverse the transaction",
     "2036": "The direct debit mandate is not in Active state",
-    "2037": "The account of the debit party is in a state which prohibits execution of this transaction",
+    "2037": (
+        "The account of the debit party is in a state which prohibits execution of this transaction"
+    ),
     "2038": "Debit party identity tag prohibits execution of this transaction",
-    "2039": "The account of the credit party is in a state which prohibits execution of this transaction",
+    "2039": (
+        "The account of the credit party is in a state which prohibits execution "
+        "of this transaction"
+    ),
     "2040": "Credit party identity tag prohibits execution of this transaction",
     "2041": "Credit party identity is in a state which does not support the current service",
     "2042": "Reverse failed because the initiator has no permission to reverse the transaction.",
     "2043": "The security credential of the subscriber is incorrect.",
-    "2044": "Identity has not subscribed to a product that contains the expected service or the identity is not in Active status.",
+    "2044": (
+        "Identity has not subscribed to a product that contains the expected "
+        "service or the identity is not in Active status."
+    ),
     "2045": "The MSISDN of the customer does not exist.",
     "2046": "Identity has not subscribed to a product that contains requested service.",
     "2047": "TLV Data Format Error",
